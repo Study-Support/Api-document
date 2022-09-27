@@ -1,0 +1,7 @@
+- 200: Thành công
+- 401: Unauthorized Là người dùng chưa đăng nhập để thực hiện chức năng
+- 403: Không thuộc phạm vi truy cập, người dùng chưa đăng nhập tk admin để thực hiện quyền của admin
+- 404: Khi mình truy cập vào một id của một record nào đó mà nó k có trong có trong DB
+- 405: Người dùng đã gửi sai các phương thức: POST, GET, PUT, DELETE...
+- 422: Là kiểu lỗi về validation, giống như email nhập sai, password dài hơn 6 ký tự
+- 

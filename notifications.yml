@@ -1,0 +1,142 @@
+openapi: 3.0.1
+info:
+  title: Expenditure management
+  version: 1.0.0
+paths:
+  /notifications:
+    get:
+      tags:
+      - groups
+      summary: Lấy thông báo theo tìm kiếm
+      parameters:
+      - name: search
+        in: path
+        description: Tìm kiếm theo nội dung
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+    post:
+      tags:
+        - notifications
+      summary: Tạo thông báo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      responses:
+        401: 
+          description: Access token is missing or invalid
+        405:
+          description: Invalid input
+        422:
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /notifications/{notification_id}:
+    get:
+      tags:
+      - notifications
+      summary: Lấy thông tin chi tiết thông báo (dành cho admin)
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+    put:
+      tags:
+        - notifications
+      summary: Cập nhật thông báo
+      parameters:
+      - name: notificationId
+        in: path
+        description: notification's id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Updated notification object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      responses:
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+        404:
+          description: notification not found
+        405:
+          description: Invalid input
+        422:
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+    delete:
+      tags:
+        - notifications
+      summary: Xóa thông báo
+      parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+        404:
+          description: notification not found 
+components:
+  schemas:
+    Notification:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    ValidationError:
+      type: object
+      additionalProperties:
+        type: array
+        example: ['validation 1','validation 2']
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
