@@ -37,7 +37,7 @@ paths:
             application/json:
               schema:
                 required:
-                  - account
+                  - email
                   - password
                 properties:
                   account:
@@ -72,7 +72,7 @@ paths:
                 schema:
                   $ref: '#/components/schemas/ValidationError'
   /logout:
-    get:
+    post:
       tags:
       - accounts
       summary: Người dùng đăng xuất khỏi hệ thống.
@@ -100,6 +100,7 @@ paths:
           description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
       security:
         - bearerAuth: [] 
+  /user/edit:
     put:
       tags:
       - accounts
@@ -109,22 +110,20 @@ paths:
           application/json:
             schema:
               properties:
-                account:
-                  type: string
-                email:
-                  type: string
                 phone_number:
                   type: string
                 address:
                   type: string
                 birthday:
                   type: string
-                  format: date-time
+                  format: date
                 gender:
                   type: boolean
-                name:
+                full_name:
                   type: string
                 avatar_url:
+                  type: string
+                faculty_id: 
                   type: string
         required: true
       responses:
@@ -144,7 +143,7 @@ paths:
                 $ref: '#/components/schemas/ValidationError'
       security:
         - bearerAuth: [] 
-  /accounts/change-password:
+  /user/password:
     put:
       tags:
       - accounts
@@ -189,33 +188,60 @@ paths:
                 $ref: "#/components/schemas/ValidationError"
       security:
         - bearerAuth: [] 
+  /mentor/edit:
+    put:
+      tags:
+      - accounts
+      summary: Cập nhập thông tin mentor theo người dùng đang đăng nhập.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                cv_link:
+                  type: string
+                smart_banking:
+                  type: string
+        required: true
+      responses:
+        201:
+          description: Request đã được xử lý thành công.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        401:
+          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
+        422:
+          description: Unprocessable Entityy - tên đăng nhập đã tồn tại, password chưa đúng, chưa được nhập.
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      security:
+        - bearerAuth: [] 
 components:
   schemas:
     Account:
       type: object
       required:
-        - account
+        - email
         - password
-        - role_id
         - phone_number
         - address
-        - email
         - birthday
         - gender
-        - id_class
-        - id_faculty
-        - name
+        - faculty_id
+        - full_name
         - rating
         - avatar_url
       properties:
-        account:
+        email:
           type: string
         password:
           type: string
           format: password
         role_id:
-          type: string
-        email:
           type: string
         phone_number:
           type: string
@@ -223,14 +249,14 @@ components:
           type: string
         birthday:
           type: string
-          format: date-time
+          format: date
         gender:
           type: boolean
         id_class:
           type: string
         id_faculty:
           type: string
-        name:
+        full_name:
           type: string
         rating:
           type: string
