@@ -1,0 +1,501 @@
+openapi: 3.0.1
+info:
+  title: Expenditure management
+  version: 1.0.0
+servers: 
+  - url: http://localhost:8000/api/v1
+paths:
+  /register:
+    post:
+      tags:
+      - accounts
+      summary: Đăng ký tài khoản mới (Tạo cả account và infor)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - email
+                - password
+                - confirm_password
+                - full_name
+                - phone_number
+                - birthday
+                - gender
+                - faculty_id
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                confirm_password:
+                  type: string
+                  format: password
+                full_name:
+                  type: string
+                phone_number:
+                  type: string
+                  format: numeric
+                birthday:
+                  type: string
+                  format: date
+                gender:
+                  type: boolean
+                faculty_id:
+                  type: integer
+        required: true
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        422:
+          description: Unprocessable Entity - tên đăng nhập, email đã được sử dụng, hoặc chưa được nhập, confirm_password không khớp password.
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /login:
+    post:
+      tags:
+      - accounts
+      summary: Đăng nhập vào hệ thống.
+      requestBody:
+          content:
+            application/json:
+              schema:
+                required:
+                  - email
+                  - password
+                properties:
+                  email:
+                    type: string
+                  password:
+                    type: string
+                    format: password
+          required: true
+      responses:
+        200:
+          description: Request đã được tiếp nhận và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                properties:
+                  token:
+                    type: string
+                    example: "abcxyzabcxyz123456789" 
+        401:
+          description: Unauthorized 
+          content: 
+            application/json:
+              schema:
+                  properties:
+                    message:
+                      type: string
+                      example: "Tên đăng nhập và mật khẩu không hợp lệ"
+        422:
+          description: Unprocessable Entity - tên đăng nhập, password chưa được nhập, chưa đúng.
+          content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ValidationError'
+  /logout:
+    post:
+      tags:
+      - accounts
+      summary: Người dùng đăng xuất khỏi hệ thống.
+      operationId: logoutUser
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+        401:
+          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
+  /user:
+    get:
+      tags:
+      - accounts
+      summary: Lấy tài khoản của người đã đăng nhập
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        401:
+          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
+      security:
+        - bearerAuth: [] 
+  /user/edit:
+    put:
+      tags:
+      - accounts
+      summary: Cập nhập thông tin tài khoản theo người dùng đang đăng nhập.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                phone_number:
+                  type: string
+                address:
+                  type: string
+                birthday:
+                  type: string
+                  format: date
+                gender:
+                  type: boolean
+                full_name:
+                  type: string
+                avatar_url:
+                  type: string
+                faculty_id: 
+                  type: string
+        required: true
+      responses:
+        201:
+          description: Request đã được xử lý thành công.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        401:
+          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
+        422:
+          description: Unprocessable Entityy - tên đăng nhập đã tồn tại, password chưa đúng, chưa được nhập.
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      security:
+        - bearerAuth: [] 
+  /user/password:
+    put:
+      tags:
+      - accounts
+      summary: Cập nhập mật khẩu theo id người dùng đang đăng nhập.
+      requestBody:
+        description: Đối tượng user cập nhập.
+        content:
+          application/json:
+            schema:
+              required:
+                - current_password
+                - password
+                - confirm_password
+              properties:
+                current_password: 
+                  type: string
+                  format: password
+                  description: Mật khẩu hiện tại.
+                password: 
+                  type: string
+                  format: password
+                  description: Mật khẩu mới.
+                confirm_password: 
+                  type: string
+                  format: password
+                  description: Xác nhận mật khẩu mới.
+        required: true
+      responses:
+        201:
+          description: Request đã được xử lý thành công.
+          content:
+            application/json:
+              schema:
+                $ref : "#/components/schemas/Account"
+        401:
+          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
+        422:
+          description: Unprocessable Entityy - current_password, password, confirm_password chưa được nhập, current_password, password, confirm_password chưa đúng.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+  /notifications:
+    get:
+      tags:
+      - notifications
+      summary: Lấy thông báo theo tìm kiếm
+      parameters:
+      - name: search
+        in: query
+        description: Tìm kiếm theo nội dung
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+    post:
+      tags:
+        - notifications
+      summary: Tạo thông báo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      responses:
+        401: 
+          description: Access token is missing or invalid
+        405:
+          description: Invalid input
+        422:
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /groups:
+    get:
+      tags:
+      - groups
+      summary: Lấy nhóm học đã được duyệt nhu cầu nhưng chưa được học hoặc nhóm chưa được duyệt kèm theo những điều kiện
+      parameters:
+      - name: status
+        in: query
+        description: Nhóm đã được duyệt nhu cầu học nhưng chưa học-1, nhóm chưa được duyệt-0, all-tất cả
+        schema:
+          type: string
+      - name: subject
+        in: query
+        description: Tìm kiếm theo tên môn học 
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: Loại nhóm 0 - thiếu mentor, 1 - thiếu thành viên, all - tất cả
+        schema:
+          type: string
+      responses:
+        200:
+          description: Request đã được tiếp nhận và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+    post:
+      tags:
+        - groups
+      summary: Tạo nhóm bởi người dùng hoặc mentor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - topic
+                - information
+                - time_study
+                - student_amount
+                - location_study
+                - subject_id
+                - faculty_id
+                - self_study
+                - is_mentor
+              properties:
+                topic:
+                  type: string
+                information:
+                  type: string
+                time_study:
+                  type: string
+                student_amount: 
+                  type: integer
+                location_study:
+                  type: string
+                subject_id:
+                  type: number
+                faculty_id:
+                  type: number
+                self_study:
+                  type: boolean
+                is_mentor:
+                  type: boolean
+        required: true
+      responses:
+        401: 
+          description: Access token is missing or invalid
+        405:
+          description: Invalid input
+        422:
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /faculties:
+    get:
+      tags:
+      - faculty
+      summary: Lấy danh sách khoa
+      responses:
+        200:
+          description: Request đã được tiếp nhận và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Faculty'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+components:
+  schemas:
+    Account:
+      type: object
+      required:
+        - email
+        - phone_number
+        - address
+        - birthday
+        - gender
+        - faculty_id
+        - full_name
+        - rating
+        - avatar_url
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          format: password
+        role_id:
+          type: string
+        phone_number:
+          type: string
+        address:
+          type: string
+        birthday:
+          type: string
+          format: date
+        gender:
+          type: boolean
+        id_class:
+          type: string
+        id_faculty:
+          type: string
+        full_name:
+          type: string
+        rating:
+          type: string
+        avatar_url:
+          type: string
+    Member:
+      type: object
+      required:
+        - account_id
+        - group_id
+        - rating_mentor
+        - is_creator
+        - review
+      properties:
+        account_id:
+          type: integer
+        group_id:
+          type: integer
+        id_mentor:
+          type: boolean
+        is_creator:
+          type: boolean
+        cv_link:
+          type: string
+    Group:
+      type: object
+      required:
+        - id
+        - topic
+        - information
+        - student_amount
+        - time_study
+        - location_study
+        - subject_id
+        - status
+      properties:
+        id:
+          type: integer
+        topic:
+          type: string
+        information:
+          type: string
+        time_study:
+          type: string
+        location_study:
+          type: string
+        subject_id:
+          type: integer
+        status:
+          type: boolean
+    Notification:
+      type: object
+      required:
+        - id
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    Question: 
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - account_id
+        - group_id
+      properties:
+        id:
+          type: integer
+        title: 
+          type: string
+        description: 
+          type: string
+        account_id: 
+          type: integer
+        group_id:
+          type: integer
+    Faculty:
+      type: object
+      required:
+        - id
+        - name 
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    ValidationError:
+      type: object
+      example: ['validation 1','validation 2']
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+- bearerAuth: []  

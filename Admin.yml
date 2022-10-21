@@ -5,30 +5,6 @@ info:
 servers: 
   - url: http://localhost:8000/api/v1/admin
 paths:
-  /register:
-    post:
-      tags:
-      - accounts
-      summary: Đăng ký tài khoản mới (Tạo cả account và infor)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Account"
-        required: true
-      responses:
-        200:
-          description: Request đã được tiếp nhập và xử lý thành công.
-          content: 
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Account"
-        422:
-          description: Unprocessable Entity - tên đăng nhập, email đã được sử dụng, hoặc chưa được nhập, confirm_password không khớp password.
-          content: 
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
   /login:
     post:
       tags:
@@ -74,76 +50,6 @@ paths:
                 schema:
                   $ref: '#/components/schemas/ValidationError'
   /logout:
-    post:
-      tags:
-      - accounts
-      summary: Người dùng đăng xuất khỏi hệ thống.
-      operationId: logoutUser
-      responses:
-        200:
-          description: Request đã được tiếp nhập và xử lý thành công.
-        401:
-          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
-  /user:
-    get:
-      tags:
-      - accounts
-      summary: Lấy tài khoản của người đã đăng nhập
-      responses:
-        200:
-          description: Request đã được tiếp nhập và xử lý thành công.
-          content: 
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Account"
-        401:
-          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
-      security:
-        - bearerAuth: [] 
-  /user/edit:
-    put:
-      tags:
-      - accounts
-      summary: Cập nhập thông tin tài khoản theo người dùng đang đăng nhập.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                phone_number:
-                  type: string
-                address:
-                  type: string
-                birthday:
-                  type: string
-                  format: date
-                gender:
-                  type: boolean
-                full_name:
-                  type: string
-                avatar_url:
-                  type: string
-                faculty_id: 
-                  type: string
-        required: true
-      responses:
-        201:
-          description: Request đã được xử lý thành công.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Account"
-        401:
-          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
-        422:
-          description: Unprocessable Entityy - tên đăng nhập đã tồn tại, password chưa đúng, chưa được nhập.
-          content: 
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-      security:
-        - bearerAuth: [] 
-  /user/password:
     put:
       tags:
       - accounts
@@ -174,10 +80,6 @@ paths:
       responses:
         201:
           description: Request đã được xử lý thành công.
-          content:
-            application/json:
-              schema:
-                $ref : "#/components/schemas/Account"
         401:
           description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
         422:
@@ -186,37 +88,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
-  /mentor/edit:
-    put:
-      tags:
-      - accounts
-      summary: Cập nhập thông tin mentor theo người dùng đang đăng nhập.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                cv_link:
-                  type: string
-                smart_banking:
-                  type: string
-        required: true
-      responses:
-        201:
-          description: Request đã được xử lý thành công.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Account"
-        401:
-          description: Unauthorized- người dùng chưa đăng nhập để thực hiện chức năng này.
-        422:
-          description: Unprocessable Entityy - tên đăng nhập đã tồn tại, password chưa đúng, chưa được nhập.
-          content: 
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-  /group/members:
+  /group/{group_id}/members:
     get:
       tags:
       - members
@@ -262,6 +134,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationError'
+    parameters:
+      - in: path
+        name: group_id
+        description: Id nhóm
+        required: true
+        schema:
+          type: string
   /group/members/{member_id}:
     put:
       tags:
@@ -388,12 +267,6 @@ paths:
       tags:
         - groups
       summary: Cập nhật thông tin nhóm (Có thể cập nhật như là status khi mà admin duyệt, hoặc cho người tạo nhóm cập nhật thông tin nhóm khi nhóm chưa được duyệt. Nhưng khi người dùng cố tình push lên status nhóm thì server k update)
-      parameters:
-      - name: group_id
-        in: path
-        required: true
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -442,7 +315,7 @@ paths:
   /notifications:
     get:
       tags:
-      - groups
+      - notifications
       summary: Lấy thông báo theo tìm kiếm
       parameters:
       - name: search
@@ -560,31 +433,128 @@ paths:
         required: true
         schema:
           type: string
+  /questions:
+    get:
+      tags:
+      - questions
+      summary: Lấy danh sách câu hỏi
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+  /answers:
+    get:
+      tags:
+      - questions
+      summary: Lấy danh sách câu trả lời
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+  /users: 
+    get:
+      tags:
+      - users
+      summary: Lấy danh sách người dùng
+      responses:
+        200:
+          description: Request đã được tiếp nhận và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserInfo'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+  /users/{user_id}:
+    get:
+      tags:
+      - users
+      summary: Lấy thông tin chi tiết người dùng
+      responses:
+        200:
+          description: Request đã được tiếp nhập và xử lý thành công.
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserInfo'
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+    put:
+      tags:
+        - users
+      summary: Cập nhật thông tin người dùng
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfoUpdate'
+      responses:
+        401: 
+          description: Access token is missing or invalid
+        403:
+          description: Forbidden Error
+        404:
+          description: UserInfo not found
+        405:
+          description: Invalid input
+        422:
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
 components:
   schemas:
-    Account:
+    UserInfo:
       type: object
       required:
-        - email
-        - password
         - phone_number
         - address
         - birthday
         - gender
         - faculty_id
         - full_name
-        - rating
-        - avatar_url
+        - is_active
       properties:
+        id:
+          type: string
         email:
           type: string
-        password:
-          type: string
-          format: password
-        role_id:
-          type: string
+          format: email
         phone_number:
-          type: string
+          type: number
         address:
           type: string
         birthday:
@@ -592,15 +562,45 @@ components:
           format: date
         gender:
           type: boolean
-        id_class:
-          type: string
-        id_faculty:
+        faculty_id:
           type: string
         full_name:
           type: string
-        rating:
+        avatar_url:
+          type: string
+        is_active:
+          type: boolean
+        group:
+          type: integer
+    UserInfoUpdate:
+      type: object
+      required:
+        - phone_number
+        - address
+        - birthday
+        - gender
+        - faculty_id
+        - full_name
+        - is_active
+      properties:
+        phone_number:
+          type: number
+        address:
+          type: string
+        birthday:
+          type: string
+          format: date
+        gender:
+          type: boolean
+        faculty_id:
+          type: number
+        full_name:
           type: string
         avatar_url:
+          type: string
+        is_active:
+          type: boolean
+        rating:
           type: string
     Member:
       type: object
@@ -657,6 +657,42 @@ components:
           type: string
         description:
           type: string
+    Question: 
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - account_id
+        - group_id
+      properties:
+        id:
+          type: integer
+        title: 
+          type: string
+        description: 
+          type: string
+        account_id: 
+          type: integer
+        group_id:
+          type: integer
+    Answer: 
+      type: object
+      required:
+        - id
+        - description
+        - account_id
+        - question_id
+      properties:
+        id:
+          type: integer
+        description: 
+          type: string
+        account_id: 
+          type: integer
+        question_id:
+          type: integer
+          
     ValidationError:
       type: object
       example: ['validation 1','validation 2']
